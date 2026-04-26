@@ -91,6 +91,7 @@ ASGI_APPLICATION = 'academie_numerique.asgi.application'
 
 # Database
 DB_ENGINE = os.environ.get('DB_ENGINE', 'mysql')
+
 if DB_ENGINE == 'sqlite3':
     DATABASES = {
         'default': {
@@ -98,7 +99,15 @@ if DB_ENGINE == 'sqlite3':
             'NAME': BASE_DIR / os.environ.get('DB_NAME', 'db.sqlite3'),
         }
     }
-else:
+elif DB_ENGINE == 'postgresql':
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.environ.get('DATABASE_URL', 'postgres://user:password@host:port/dbname'),
+            conn_max_age=600
+        )
+    }
+else: # assumes mysql
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',

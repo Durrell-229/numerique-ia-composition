@@ -1,6 +1,8 @@
 from io import BytesIO
 from django.template.loader import render_to_string
-from xhtml2pdf import pisa
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib.utils import simpleSplit
 from django.conf import settings
 import os
 
@@ -19,16 +21,39 @@ class BulletinService:
             'date': submission.created_at,
         }
         
-        # Rendu du template HTML
-        html = render_to_string('bulletins/bulletin_template.html', context)
-        
-        # Création du PDF
+        # Création du PDF avec reportlab
         result = BytesIO()
-        pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), result)
+        pdf_canvas = canvas.Canvas(result, pagesize=letter)
         
-        if not pdf.err:
-            return result.getvalue()
-        return None
+        # Titre
+        pdf_canvas.setFont("Helvetica-Bold", 16)
+        pdf_canvas.drawString(50, 750, "Bulletin de Correction")
+        
+        # Contenu
+        pdf_canvas.setFont("Helvetica", 10)
+        y = 720
+        pdf_canvas.drawString(50, y, f"Élève: {submission.student.username}")
+        y -= 20
+        pdf_canvas.drawString(50, y, f"Examen: {submission.exam.titre}")
+        y -= 20
+        pdf_canvas.drawString(50, y, f"Note: {context['grade']}")
+        y -= 30
+        
+        pdf_canvas.setFont("Helvetica-Bold", 11)
+        pdf_canvas.drawString(50, y, "Feedback:")
+        y -= 15
+        pdf_canvas.setFont("Helvetica", 9)
+        
+        if context['feedback']:
+            lines = context['feedback'].split('\n')
+            for line in lines[:30]:  # Limiter à 30 lignes
+                pdf_canvas.drawString(50, y, line[:100])
+                y -= 12
+                if y < 50:
+                    break
+        
+        pdf_canvas.save()
+        return result.getvalue()
 
     @staticmethod
     def generate_pdf_from_bulletin(bulletin):

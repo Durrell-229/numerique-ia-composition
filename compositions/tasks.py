@@ -6,7 +6,8 @@ from ai_engine.multi_ai import multi_ai
 from ai_engine.services import extract_text_from_file
 from io import BytesIO
 from django.template.loader import render_to_string
-from xhtml2pdf import pisa
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
 from django.core.files.base import ContentFile
 
 logger = logging.getLogger(__name__)
